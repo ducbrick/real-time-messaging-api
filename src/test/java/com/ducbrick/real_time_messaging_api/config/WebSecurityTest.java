@@ -18,35 +18,35 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @SpringBootTest
 @AutoConfigureMockMvc
 class WebSecurityTest {
-	@Autowired private MockMvc mvc;
+  @Autowired private MockMvc mvc;
 
-	@DisplayName("Unauthenticated request should return 401")
-	@Test
-	public void unauthenticated_401() throws Exception {
-		mvc
-				.perform(get("/"))
-				.andExpect(status().isUnauthorized());
-	}
+  @DisplayName("Unauthenticated request should return 401")
+  @Test
+  public void unauthenticated_401() throws Exception {
+    mvc
+        .perform(get("/"))
+        .andExpect(status().isUnauthorized());
+  }
 
-	@DisplayName("Request with OIDC token should be authenticated")
-	@Test
-	public void requestWithOIDCToken_authenticated() throws Exception {
-		mvc
-				.perform(get("/")
-						.with(oidcLogin()))
-				.andExpectAll(
-						status().isOk(),
-						content().string("Hello World"));
-	}
+  @DisplayName("Request with OIDC token should be authenticated")
+  @Test
+  public void requestWithOIDCToken_authenticated() throws Exception {
+    mvc
+        .perform(get("/")
+            .with(oidcLogin()))
+        .andExpectAll(
+            status().isOk(),
+            content().string("Hello World"));
+  }
 
-	@DisplayName("POST request shouldnt need CSRF token")
-	@Test
-	public void postRequestNoCSRF() throws Exception {
-		mvc
-				.perform(post("/")
-						.with(oidcLogin()))
-				.andExpectAll(
-						status().isOk(),
-						content().string("Hello World POST"));
-	}
+  @DisplayName("POST request shouldnt need CSRF token")
+  @Test
+  public void postRequestNoCSRF() throws Exception {
+    mvc
+        .perform(post("/")
+            .with(oidcLogin()))
+        .andExpectAll(
+            status().isOk(),
+            content().string("Hello World POST"));
+  }
 }
