@@ -38,4 +38,15 @@ class WebSecurityTest {
 						status().isOk(),
 						content().string("Hello World"));
 	}
+
+	@DisplayName("POST request shouldnt need CSRF token")
+	@Test
+	public void postRequestNoCSRF() throws Exception {
+		mvc
+				.perform(post("/")
+						.with(oidcLogin()))
+				.andExpectAll(
+						status().isOk(),
+						content().string("Hello World POST"));
+	}
 }
