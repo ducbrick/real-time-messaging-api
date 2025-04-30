@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -26,5 +26,28 @@ class UserRepoTest {
         .build();
 
     userRepo.save(user);
+  }
+  
+  @DisplayName("Test entity constraints")
+  @Test
+  public void testConstraints() {
+    User invalidUser = User
+        .builder()
+        .name("John Doe")
+        .email("jdoe@me.com")
+        .build();
+
+    assertThatThrownBy(() -> userRepo.save(invalidUser));
+
+    User validUser = User
+        .builder()
+        .name("John Doe")
+        .email("jdoe@me.com")
+        .idProviderUrl("https://accounts.google.com")
+        .idProviderId("123456789")
+        .build();
+
+    validUser = userRepo.save(validUser);
+    assertThat(validUser.getId()).isNotNull();
   }
 }
