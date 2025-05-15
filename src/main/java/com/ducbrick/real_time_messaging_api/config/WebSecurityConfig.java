@@ -1,6 +1,7 @@
 package com.ducbrick.real_time_messaging_api.config;
 
 import com.ducbrick.real_time_messaging_api.services.auth.CustomJwtAuthenticationConverter;
+import com.ducbrick.real_time_messaging_api.services.persistence.UserPersistenceService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -14,12 +15,13 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class WebSecurityConfig {
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http, UserPersistenceService userPersistenceService) throws Exception {
     http
         .csrf(AbstractHttpConfigurer::disable)
         .oauth2ResourceServer(oa2 -> oa2
             .jwt(jwt -> jwt
-                .jwtAuthenticationConverter(new CustomJwtAuthenticationConverter(new JwtGrantedAuthoritiesConverter()))
+                .jwtAuthenticationConverter(new CustomJwtAuthenticationConverter(new JwtGrantedAuthoritiesConverter(),
+                                                                                 userPersistenceService))
             )
         )
         .authorizeHttpRequests(auth -> auth
