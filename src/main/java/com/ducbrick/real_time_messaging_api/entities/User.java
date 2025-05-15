@@ -1,6 +1,7 @@
 package com.ducbrick.real_time_messaging_api.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -19,6 +20,7 @@ public class User {
   private String name;
 
   @NotBlank
+  @Email
   private String email;
 
   @Column(name = "id_provider_url")
