@@ -50,4 +50,26 @@ class UserRepoTest {
     validUser = userRepo.save(validUser);
     assertThat(validUser.getId()).isNotNull();
   }
+
+  @DisplayName("Get user by issuer and sub")
+  @Test
+  public void getUserByIssuerAndSub() {
+    assertThat(userRepo.findByIssuerAndSub("https://accounts.google.com", "092318412034891")
+                       .isPresent())
+        .isFalse();
+
+    User user = User
+        .builder()
+        .name("John Doe")
+        .email("jdoe@me.com")
+        .idProviderUrl("https://accounts.google.com")
+        .idProviderId("105920736259270155746")
+        .build();
+
+    user = userRepo.save(user);
+
+    assertThat(userRepo.findByIssuerAndSub("https://accounts.google.com", "105920736259270155746")
+                       .orElse(null))
+        .isSameAs(user);
+  }
 }
