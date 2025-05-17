@@ -1,5 +1,6 @@
 package com.ducbrick.real_time_messaging_api.services.auth;
 
+import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.services.persistence.UserPersistenceService;
 import com.ducbrick.real_time_messaging_api.wrappers.auth.CustomJwtAuthenticationToken;
@@ -21,11 +22,9 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
   public final AbstractAuthenticationToken convert(Jwt jwt) {
     Collection<GrantedAuthority> authorities = this.jwtGrantedAuthoritiesConverter.convert(jwt);
 
-    User user = userPersistenceService.getByIssuerAndSub(jwt);
-
-    if (user == null) {
-      user = userPersistenceService.saveNewByJwt(jwt);
-    }
+    UserDetailsDto user = userPersistenceService
+        .getByIssuerAndSub(jwt)
+        .orElse(userPersistenceService.saveNewByJwt(jwt));
 
     return new CustomJwtAuthenticationToken(jwt, authorities, user);
   }

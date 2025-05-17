@@ -1,44 +1,87 @@
 package com.ducbrick.real_time_messaging_api.services.persistence;
 
+import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Validated
 public class UserPersistenceService {
-  private final UserRepo userRepo;
+  private final Logger logger = LoggerFactory.getLogger(UserPersistenceService.class);
 
-  public User getByIssuerAndSub(@NotNull Jwt jwt) {
+  private final UserRepo userRepo;
+  private final Validator validator;
+
+  public Optional<UserDetailsDto> getByIssuerAndSub(@NotNull Jwt jwt) {
     Map<String, Object> claims = jwt.getClaims();
 
     String issuer = (String) claims.getOrDefault("iss", "");
     String sub = (String) claims.getOrDefault("sub", "");
 
-    return userRepo.findByIssuerAndSub(issuer, sub).orElse(null);
+    User user = userRepo.findByIssuerAndSub(issuer, sub).orElse(null);
+
+    if (user == null) {
+      return Optional.empty();
+    }
+
+    UserDetailsDto userDto = UserDetailsDto
+        .builder()
+        .id(user.getId())
+        .name(user.getName())
+        .email(user.getEmail())
+        .build();
+
+    return Optional.of(userDto);
   }
 
   @Transactional
-  public User saveNewByJwt(@NotNull @Valid Jwt jwt) {
+  public UserDetailsDto saveNewByJwt(@NotNull Jwt jwt) {
     Map<String, Object> claims = jwt.getClaims();
+
+    String name = (String) claims.getOrDefault("name", "");
+    String email = (String) claims.getOrDefault("email", "");
+    String issuer = (String) claims.getOrDefault("iss", "");
+    String sub = (String) claims.getOrDefault("sub", "");
 
     User user = User
         .builder()
-        .name((String) claims.getOrDefault("name", "No Name"))
-        .email((String) claims.getOrDefault("email", ""))
-        .idProviderUrl((String) claims.getOrDefault("iss", ""))
-        .idProviderId((String) claims.getOrDefault("sub", ""))
+        .name(name)
+        .email(email)
+        .idProviderUrl(issuer)
+        .idProviderId(sub)
         .build();
 
-    return userRepo.save(user);
+    Set<ConstraintViolation<User>> violations = validator.validate(user);
+
+    if (!violations.isEmpty()) {
+      logger.error("Constraint violations when saving a new user from JWT: {}", violations);
+      throw new ConstraintViolationException(violations);
+    }
+
+    user = userRepo.save(user);
+
+    return UserDetailsDto
+        .builder()
+        .id(user.getId())
+        .name(name)
+        .email(email)
+        .build();
   }
 }
