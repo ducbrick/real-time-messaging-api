@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS app_user;
+
+CREATE TABLE app_user (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR NOT NULL,
+	email VARCHAR NOT NULL,
+	id_provider_url VARCHAR NOT NULL,
+	id_provider_id VARCHAR NOT NULL
+);
