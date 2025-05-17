@@ -20,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,10 +36,21 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @SpringBootTest
 @AutoConfigureMockMvc
 class WebSecurityTest {
+
   @TestConfiguration
   @RestController
   @RequestMapping("/test")
   static class TestController {
+    @GetMapping
+    public String get() {
+      return "Hello World";
+    }
+
+    @PostMapping
+    public String post() {
+      return "Hello World POST";
+    }
+
     @GetMapping("/principal")
     public User getPrincipal(@AuthenticationPrincipal User principal) {
       return principal;
@@ -53,7 +65,7 @@ class WebSecurityTest {
   @Test
   public void unauthenticated_401() throws Exception {
     mvc
-        .perform(get("/"))
+        .perform(get("/test"))
         .andExpect(status().isUnauthorized());
   }
 
@@ -61,8 +73,10 @@ class WebSecurityTest {
   @Test
   public void requestWithOIDCToken_authenticated() throws Exception {
     mvc
-        .perform(get("/")
-            .with(oidcLogin()))
+        .perform(
+            get("/test")
+            .with(oidcLogin())
+        )
         .andExpectAll(
             status().isOk(),
             content().string("Hello World"));
@@ -72,8 +86,10 @@ class WebSecurityTest {
   @Test
   public void postRequestNoCSRF() throws Exception {
     mvc
-        .perform(post("/")
-            .with(oidcLogin()))
+        .perform(post("/test")
+            .with(oidcLogin())
+            .with(csrf().useInvalidToken())
+        )
         .andExpectAll(
             status().isOk(),
             content().string("Hello World POST"));
