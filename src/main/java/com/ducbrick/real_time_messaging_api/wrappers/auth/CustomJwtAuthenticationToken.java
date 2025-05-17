@@ -1,5 +1,6 @@
 package com.ducbrick.real_time_messaging_api.wrappers.auth;
 
+import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -8,7 +9,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.util.Collection;
 
 public class CustomJwtAuthenticationToken extends JwtAuthenticationToken {
-  private User principal;
+  private UserDetailsDto principal;
 
   public CustomJwtAuthenticationToken(Jwt jwt) {
     super(jwt);
@@ -22,7 +23,7 @@ public class CustomJwtAuthenticationToken extends JwtAuthenticationToken {
     super(jwt, authorities, name);
   }
 
-  public CustomJwtAuthenticationToken(Jwt jwt, Collection<? extends GrantedAuthority> authorities, User user) {
+  public CustomJwtAuthenticationToken(Jwt jwt, Collection<? extends GrantedAuthority> authorities, UserDetailsDto user) {
     super(jwt, authorities);
     principal = user;
   }

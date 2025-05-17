@@ -1,5 +1,6 @@
 package com.ducbrick.real_time_messaging_api.config;
 
+import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,7 +58,7 @@ class WebSecurityTest {
     }
 
     @GetMapping("/principal")
-    public User getPrincipal(@AuthenticationPrincipal User principal) {
+    public UserDetailsDto getPrincipal(@AuthenticationPrincipal UserDetailsDto principal) {
       return principal;
     }
   }
@@ -128,11 +129,10 @@ class WebSecurityTest {
         .andExpect(status().isOk())
         .andReturn();
 
-    User principal = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
+    UserDetailsDto principal = objectMapper.readValue(result.getResponse().getContentAsString(), UserDetailsDto.class);
 
-    assertThat(principal.getName()).isEqualTo(name);
-    assertThat(principal.getEmail()).isEqualTo(email);
-    assertThat(principal.getIdProviderUrl()).isEqualTo(issuer);
-    assertThat(principal.getIdProviderId()).isEqualTo(sub);
+    assertThat(principal.id()).isNotNull();
+    assertThat(principal.name()).isEqualTo(name);
+    assertThat(principal.email()).isEqualTo(email);
   }
 }
