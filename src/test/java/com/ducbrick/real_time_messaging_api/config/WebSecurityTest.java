@@ -1,12 +1,14 @@
 package com.ducbrick.real_time_messaging_api.config;
 
 import com.ducbrick.real_time_messaging_api.entities.User;
+import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -19,10 +21,13 @@ import org.springframework.security.test.web.servlet.response.SecurityMockMvcRes
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -97,14 +102,20 @@ class WebSecurityTest {
 
   @DisplayName("Authentication principal should be resolved")
   @Test
+  @Transactional
   public void resolveAuthenticationPrincipal() throws Exception {
+    String issuer = "https://accounts.google.com";
+    String sub = "41797103410324198";
+    String name = "John Doe";
+    String email = "jdoe@me.com";
+
     Jwt jwt = Jwt
         .withTokenValue("random")
         .header("alg", "RS256")
-        .issuer("https://accounts.google.com")
-        .subject("41797103410324198")
-        .claim("name", "John Doe")
-        .claim("email", "jdoe@me.com")
+        .issuer(issuer)
+        .subject(sub)
+        .claim("name", name)
+        .claim("email", email)
         .build();
 
     when(jwtDecoder.decode(Mockito.anyString())).thenReturn(jwt);
@@ -119,9 +130,9 @@ class WebSecurityTest {
 
     User principal = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
 
-    assertThat(principal.getName()).isEqualTo("John Doe");
-    assertThat(principal.getEmail()).isEqualTo("jdoe@me.com");
-    assertThat(principal.getIdProviderUrl()).isEqualTo("https://accounts.google.com");
-    assertThat(principal.getIdProviderId()).isEqualTo("41797103410324198");
+    assertThat(principal.getName()).isEqualTo(name);
+    assertThat(principal.getEmail()).isEqualTo(email);
+    assertThat(principal.getIdProviderUrl()).isEqualTo(issuer);
+    assertThat(principal.getIdProviderId()).isEqualTo(sub);
   }
 }
