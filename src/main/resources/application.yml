@@ -7,6 +7,12 @@ spring:
   security:
     oauth2:
       resourceserver:
+        userinfo-endpoint: ${OAUTH2_USERINFO_ENDPOINT}
         jwt:
           issuer-uri: ${OAUTH2_ISSUER_URI}
           audiences:  ${OAUTH2_CLIENT_ID}
+
+app:
+  auth-server:
+    url: ${OAUTH2_ISSUER_URI}
+    userinfo-endpoint: ${OAUTH2_USERINFO_ENDPOINT}
