@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultHandlers.exportTestSecurityContext;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
@@ -47,99 +49,125 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @AutoConfigureMockMvc
 class WebSecurityTest {
 
-  @TestConfiguration
-  @RestController
-  @RequestMapping("/test")
-  static class TestController {
-    @GetMapping
-    public String get() {
-      return "Hello World";
-    }
+	@TestConfiguration
+	@RestController
+	@RequestMapping("/test")
+	static class TestController {
+		@GetMapping
+		public String get() {
+			return "Hello World";
+		}
 
-    @PostMapping
-    public String post() {
-      return "Hello World POST";
-    }
+		@PostMapping
+		public String post() {
+			return "Hello World POST";
+		}
 
-    @GetMapping("/principal")
-    public UserDetailsDto getPrincipal(@AuthenticationPrincipal UserDetailsDto principal) {
-      return principal;
-    }
-  }
+		@GetMapping("/principal")
+		public UserDetailsDto getPrincipal(@AuthenticationPrincipal UserDetailsDto principal) {
+			return principal;
+		}
+	}
 
-  @Autowired private MockMvc mvc;
-  @Autowired private ObjectMapper objectMapper;
-  @MockitoBean private JwtDecoder jwtDecoder;
-  @MockitoBean private AuthServerProxy authServer;
+	@Autowired private MockMvc mvc;
+	@Autowired private ObjectMapper objectMapper;
+	@MockitoBean private JwtDecoder jwtDecoder;
+	@MockitoBean private AuthServerProxy authServer;
 
-  @DisplayName("Unauthenticated request should return 401")
-  @Test
-  public void unauthenticated_401() throws Exception {
-    mvc
-        .perform(get("/test"))
-        .andExpect(status().isUnauthorized());
-  }
+	@DisplayName("Unauthenticated request should return 401")
+	@Test
+	public void unauthenticated_401() throws Exception {
+		mvc
+			.perform(get("/test"))
+			.andExpect(status().isUnauthorized());
+	}
 
-  @DisplayName("Request with OIDC token should be authenticated")
-  @Test
-  public void requestWithOIDCToken_authenticated() throws Exception {
-    mvc
-        .perform(
-            get("/test")
-            .with(oidcLogin())
-        )
-        .andExpectAll(
-            status().isOk(),
-            content().string("Hello World"));
-  }
+	@DisplayName("Request with JWT should be authenticated")
+	@Test
+	@Transactional
+	public void requestWithJwt_authenticated() throws Exception {
+		String name = "John Doe";
+		String email = "jdoe@me.com";
 
-  @DisplayName("POST request shouldnt need CSRF token")
-  @Test
-  public void postRequestNoCSRF() throws Exception {
-    mvc
-        .perform(post("/test")
-            .with(oidcLogin())
-            .with(csrf().useInvalidToken())
-        )
-        .andExpectAll(
-            status().isOk(),
-            content().string("Hello World POST"));
-  }
+		AuthServerUsrInfo userInfo = new AuthServerUsrInfo(name, email);
+		when(authServer.getUserInfo(anyString())).thenReturn(userInfo);
 
-  @DisplayName("Authentication principal should be resolved")
-  @Test
-  @Transactional
-  public void resolveAuthenticationPrincipal() throws Exception {
-    String tokenValue = "random";
-    String issuer = "https://ducbrick.us.auth0.com";
-    String sub = "41797103410324198";
-    String name = "John Doe";
-    String email = "jdoe@me.com";
+		mvc
+			.perform(
+				get("/test")
+					.with(jwt()
+						.authorities(
+							new SimpleGrantedAuthority("SCOPE_openid"),
+							new SimpleGrantedAuthority("SCOPE_profile"),
+							new SimpleGrantedAuthority("SCOPE_email")
+						)
+					)
+			)
+			.andExpectAll(
+				status().isOk(),
+				content().string("Hello World"));
+	}
 
-    Jwt jwt = Jwt
-        .withTokenValue(tokenValue)
-        .header("alg", "RS256")
-        .issuer(issuer)
-        .subject(sub)
-        .build();
+	@DisplayName("POST request shouldnt need CSRF token")
+	@Test
+	@Transactional
+	public void postRequestNoCSRF() throws Exception {
+		String name = "John Doe";
+		String email = "jdoe@me.com";
 
-    when(jwtDecoder.decode(tokenValue)).thenReturn(jwt);
+		AuthServerUsrInfo userInfo = new AuthServerUsrInfo(name, email);
+		when(authServer.getUserInfo(anyString())).thenReturn(userInfo);
 
-    AuthServerUsrInfo userInfo = new AuthServerUsrInfo(name, email);
-    when(authServer.getUserInfo(jwt.getTokenValue())).thenReturn(userInfo);
+		mvc
+			.perform(post("/test")
+				.with(jwt()
+						.authorities(
+							new SimpleGrantedAuthority("SCOPE_openid"),
+							new SimpleGrantedAuthority("SCOPE_profile"),
+							new SimpleGrantedAuthority("SCOPE_email")
+						))
+				.with(csrf().useInvalidToken())
+			)
+			.andExpectAll(
+				status().isOk(),
+				content().string("Hello World POST"));
+	}
 
-    MvcResult result = mvc
-        .perform(
-            get("/test/principal")
-            .header("Authorization", "Bearer " + tokenValue)
-        )
-        .andExpect(status().isOk())
-        .andReturn();
+	@DisplayName("Authentication principal should be resolved")
+	@Test
+	@Transactional
+	public void resolveAuthenticationPrincipal() throws Exception {
+		String tokenVal = "random";
+		String issuer = "https://ducbrick.us.auth0.com";
+		String sub = "41797103410324198";
+		String name = "John Doe";
+		String email = "jdoe@me.com";
 
-    UserDetailsDto principal = objectMapper.readValue(result.getResponse().getContentAsString(), UserDetailsDto.class);
+		Jwt jwt = Jwt
+			.withTokenValue(tokenVal)
+			.header("alg", "none")
+			.issuer(issuer)
+			.subject(sub)
+			.claim("scope", "openid profile email")
+			.build();
 
-    assertThat(principal.id()).isNotNull();
-    assertThat(principal.name()).isEqualTo(name);
-    assertThat(principal.email()).isEqualTo(email);
-  }
+		when(jwtDecoder.decode(tokenVal)).thenReturn(jwt);
+
+		AuthServerUsrInfo userInfo = new AuthServerUsrInfo(name, email);
+		when(authServer.getUserInfo(tokenVal)).thenReturn(userInfo);
+
+		MvcResult result = mvc
+			.perform(
+				get("/test/principal")
+					.header("Authorization", "Bearer " + tokenVal)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		UserDetailsDto principal = objectMapper.readValue(result.getResponse().getContentAsString(), UserDetailsDto.class);
+
+		assertThat(principal.id()).isNotNull();
+		assertThat(principal.name()).isEqualTo(name);
+		assertThat(principal.email()).isEqualTo(email);
+	}
 }
