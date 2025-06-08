@@ -44,6 +44,7 @@ public class UserPersistenceService {
       return Optional.empty();
     }
 
+    //TODO: Update user info after a period of time
     UserDetailsDto userDto = UserDetailsDto
         .builder()
         .id(user.getId())
