@@ -35,8 +35,8 @@ public class UserPersistenceService {
   public Optional<UserDetailsDto> getByIssuerAndSub(@NotNull Jwt jwt) {
     Map<String, Object> claims = jwt.getClaims();
 
-    String issuer = (String) claims.getOrDefault("iss", "");
-    String sub = (String) claims.getOrDefault("sub", "");
+    String issuer = String.valueOf(claims.getOrDefault("iss", ""));
+    String sub = String.valueOf(claims.getOrDefault("sub", ""));
 
     User user = userRepo.findByIssuerAndSub(issuer, sub).orElse(null);
 
