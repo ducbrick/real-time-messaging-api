@@ -19,7 +19,8 @@ public class WebSecurityConfig {
 		http
 				.csrf(AbstractHttpConfigurer::disable)
 				.oauth2ResourceServer(oa -> oa
-					.jwt(Customizer.withDefaults())
+					.jwt(jwt -> jwt
+						.jwtAuthenticationConverter(new CustomJwtAuthenticationConverter(new JwtGrantedAuthoritiesConverter(), userPersistenceService)))
 				)
 				.authorizeHttpRequests(auth -> auth
 					.anyRequest().authenticated()

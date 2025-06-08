@@ -3,6 +3,7 @@ package com.ducbrick.real_time_messaging_api.config;
 import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
+import com.ducbrick.real_time_messaging_api.services.proxies.AuthServerProxy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -66,6 +69,7 @@ class WebSecurityTest {
   @Autowired private MockMvc mvc;
   @Autowired private ObjectMapper objectMapper;
   @MockitoBean private JwtDecoder jwtDecoder;
+  @MockitoBean private AuthServerProxy authServer;
 
   @DisplayName("Unauthenticated request should return 401")
   @Test
@@ -105,26 +109,30 @@ class WebSecurityTest {
   @Test
   @Transactional
   public void resolveAuthenticationPrincipal() throws Exception {
-    String issuer = "https://accounts.google.com";
+    String tokenValue = "random";
+    String issuer = "https://ducbrick.us.auth0.com";
     String sub = "41797103410324198";
     String name = "John Doe";
     String email = "jdoe@me.com";
 
     Jwt jwt = Jwt
-        .withTokenValue("random")
+        .withTokenValue(tokenValue)
         .header("alg", "RS256")
         .issuer(issuer)
         .subject(sub)
-        .claim("name", name)
-        .claim("email", email)
         .build();
 
-    when(jwtDecoder.decode(Mockito.anyString())).thenReturn(jwt);
+    when(jwtDecoder.decode(tokenValue)).thenReturn(jwt);
+
+    Map<String, String> userInfo = new HashMap<>();
+    userInfo.put("name", name);
+    userInfo.put("email", email);
+    when(authServer.getUserInfo(jwt.getTokenValue())).thenReturn(userInfo);
 
     MvcResult result = mvc
         .perform(
             get("/test/principal")
-            .header("Authorization", "Bearer random")
+            .header("Authorization", "Bearer " + tokenValue)
         )
         .andExpect(status().isOk())
         .andReturn();
