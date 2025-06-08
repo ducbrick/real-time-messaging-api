@@ -10,7 +10,7 @@ spring:
         userinfo-endpoint: ${OAUTH2_USERINFO_ENDPOINT}
         jwt:
           issuer-uri: ${OAUTH2_ISSUER_URI}
-          audiences:  ${OAUTH2_CLIENT_ID}
+          audiences:  ${OAUTH2_AUDIENCE}
 
 app:
   auth-server:

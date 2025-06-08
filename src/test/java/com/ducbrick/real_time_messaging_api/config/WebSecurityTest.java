@@ -1,5 +1,6 @@
 package com.ducbrick.real_time_messaging_api.config;
 
+import com.ducbrick.real_time_messaging_api.dtos.AuthServerUsrInfo;
 import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
@@ -124,9 +125,7 @@ class WebSecurityTest {
 
     when(jwtDecoder.decode(tokenValue)).thenReturn(jwt);
 
-    Map<String, String> userInfo = new HashMap<>();
-    userInfo.put("name", name);
-    userInfo.put("email", email);
+    AuthServerUsrInfo userInfo = new AuthServerUsrInfo(name, email);
     when(authServer.getUserInfo(jwt.getTokenValue())).thenReturn(userInfo);
 
     MvcResult result = mvc

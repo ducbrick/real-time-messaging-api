@@ -1,5 +1,6 @@
 package com.ducbrick.real_time_messaging_api.services.persistence;
 
+import com.ducbrick.real_time_messaging_api.dtos.AuthServerUsrInfo;
 import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
@@ -55,11 +56,11 @@ public class UserPersistenceService {
 
   @Transactional
   public UserDetailsDto saveNewByJwt(@NotNull Jwt jwt) {
-    Map<String, String> userInfo = authServer.getUserInfo(jwt.getTokenValue());
+    AuthServerUsrInfo userInfo = authServer.getUserInfo(jwt.getTokenValue());
     Map<String, Object> claims = jwt.getClaims();
 
-    String name = userInfo.getOrDefault("name", "");
-    String email = userInfo.getOrDefault("email", "");
+    String name = userInfo.name();
+    String email = userInfo.email();
     String issuer = String.valueOf(claims.getOrDefault("iss", ""));
     String sub = String.valueOf(claims.getOrDefault("sub", ""));
 
