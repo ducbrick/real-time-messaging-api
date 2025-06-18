@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class CustomJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
@@ -22,9 +23,11 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
   public final AbstractAuthenticationToken convert(Jwt jwt) {
     Collection<GrantedAuthority> authorities = this.jwtGrantedAuthoritiesConverter.convert(jwt);
 
-    UserDetailsDto user = userPersistenceService
-        .getByIssuerAndSub(jwt)
-        .orElse(userPersistenceService.saveNewByJwt(jwt));
+    Optional<UserDetailsDto> userOpt = userPersistenceService.getByIssuerAndSub(jwt);
+
+    UserDetailsDto user;
+
+	  user = userOpt.orElseGet(() -> userPersistenceService.saveNewByJwt(jwt));
 
     return new CustomJwtAuthenticationToken(jwt, authorities, user);
   }

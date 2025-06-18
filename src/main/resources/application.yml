@@ -7,6 +7,12 @@ spring:
   security:
     oauth2:
       resourceserver:
+        userinfo-endpoint: ${OAUTH2_USERINFO_ENDPOINT}
         jwt:
-          issuer-uri: ${GOOGLE_OAUTH2_ISSUER_URI}
-          audiences:  ${GOOGLE_OAUTH2_CLIENT_ID}
+          issuer-uri: ${OAUTH2_ISSUER_URI}
+          audiences:  ${OAUTH2_AUDIENCE}
+
+app:
+  auth-server:
+    url: ${OAUTH2_ISSUER_URI}
+    userinfo-endpoint: ${OAUTH2_USERINFO_ENDPOINT}

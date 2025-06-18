@@ -1,8 +1,10 @@
 package com.ducbrick.real_time_messaging_api.services.persistence;
 
+import com.ducbrick.real_time_messaging_api.dtos.AuthServerUsrInfo;
 import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
+import com.ducbrick.real_time_messaging_api.services.proxies.AuthServerProxy;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -26,14 +28,15 @@ import java.util.Set;
 public class UserPersistenceService {
   private final Logger logger = LoggerFactory.getLogger(UserPersistenceService.class);
 
+  private final AuthServerProxy authServer;
   private final UserRepo userRepo;
   private final Validator validator;
 
   public Optional<UserDetailsDto> getByIssuerAndSub(@NotNull Jwt jwt) {
     Map<String, Object> claims = jwt.getClaims();
 
-    String issuer = (String) claims.getOrDefault("iss", "");
-    String sub = (String) claims.getOrDefault("sub", "");
+    String issuer = String.valueOf(claims.getOrDefault("iss", ""));
+    String sub = String.valueOf(claims.getOrDefault("sub", ""));
 
     User user = userRepo.findByIssuerAndSub(issuer, sub).orElse(null);
 
@@ -41,6 +44,7 @@ public class UserPersistenceService {
       return Optional.empty();
     }
 
+    //TODO: Update user info after a period of time
     UserDetailsDto userDto = UserDetailsDto
         .builder()
         .id(user.getId())
@@ -53,12 +57,13 @@ public class UserPersistenceService {
 
   @Transactional
   public UserDetailsDto saveNewByJwt(@NotNull Jwt jwt) {
+    AuthServerUsrInfo userInfo = authServer.getUserInfo(jwt.getTokenValue());
     Map<String, Object> claims = jwt.getClaims();
 
-    String name = (String) claims.getOrDefault("name", "");
-    String email = (String) claims.getOrDefault("email", "");
-    String issuer = (String) claims.getOrDefault("iss", "");
-    String sub = (String) claims.getOrDefault("sub", "");
+    String name = userInfo.name();
+    String email = userInfo.email();
+    String issuer = String.valueOf(claims.getOrDefault("iss", ""));
+    String sub = String.valueOf(claims.getOrDefault("sub", ""));
 
     User user = User
         .builder()
