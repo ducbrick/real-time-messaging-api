@@ -21,5 +21,6 @@ logging:
 
 app:
   auth-server:
+    access-token: ${OAUTH2_ACCESS_TOKEN}
     url: ${OAUTH2_ISSUER_URI}
     userinfo-endpoint: ${OAUTH2_USERINFO_ENDPOINT}
