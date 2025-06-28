@@ -139,7 +139,8 @@ class WebSocketSecurityConfigTest {
 			}
 		});
 
-		MsgFromUsr sentMsg = new MsgFromUsr(sub, "Hello");
+		String receiver = usrRepo.findByIssuerAndSub(issuer, sub).get().getId().toString();
+		MsgFromUsr sentMsg = new MsgFromUsr(receiver, "Hello");
 
 		session.send("/app/private-msg", sentMsg);
 

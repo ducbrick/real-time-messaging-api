@@ -6,6 +6,7 @@ import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import com.ducbrick.real_time_messaging_api.services.proxies.AuthServerProxy;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -64,13 +67,19 @@ class WebSecurityTest {
 		}
 
 		@GetMapping("/principal")
-		public UserDetailsDto getPrincipal(@AuthenticationPrincipal UserDetailsDto principal) {
+		public UserDetailsDto getPrincipal(@NotNull @AuthenticationPrincipal UserDetailsDto principal) {
 			return principal;
+		}
+
+		@GetMapping("/principal-name")
+		public String getAuthentication(@NotNull Principal principal) {
+			return principal.getName();
 		}
 	}
 
 	@Autowired private MockMvc mvc;
 	@Autowired private ObjectMapper objectMapper;
+	@Autowired private UserRepo usrRepo;
 	@MockitoBean private JwtDecoder jwtDecoder;
 	@MockitoBean private AuthServerProxy authServer;
 
@@ -169,5 +178,41 @@ class WebSecurityTest {
 		assertThat(principal.id()).isNotNull();
 		assertThat(principal.name()).isEqualTo(name);
 		assertThat(principal.email()).isEqualTo(email);
+	}
+
+	@DisplayName("Authentication object's name is the same as user id")
+	@Test
+	@Transactional
+	public void authenticationNameIsUsrId() throws Exception {
+		String tokenVal = "random";
+		String issuer = "https://ducbrick.us.auth0.com";
+		String sub = "41797103410324198";
+		String name = "John Doe";
+		String email = "jdoe@me.com";
+
+		Jwt jwt = Jwt
+				.withTokenValue(tokenVal)
+				.header("alg", "none")
+				.issuer(issuer)
+				.subject(sub)
+				.claim("scope", "openid profile email")
+				.build();
+
+		when(jwtDecoder.decode(tokenVal)).thenReturn(jwt);
+
+		AuthServerUsrInfo userInfo = new AuthServerUsrInfo(name, email);
+		when(authServer.getUserInfo(tokenVal)).thenReturn(userInfo);
+
+		MvcResult result = mvc
+				.perform(
+						get("/test/principal-name")
+								.header("Authorization", "Bearer " + tokenVal)
+				)
+				.andExpect(status().isOk())
+				.andReturn();
+
+		String usrId = usrRepo.findByIssuerAndSub(issuer, sub).get().getId().toString();
+
+		assertThat(result.getResponse().getContentAsString()).isEqualTo(usrId);
 	}
 }

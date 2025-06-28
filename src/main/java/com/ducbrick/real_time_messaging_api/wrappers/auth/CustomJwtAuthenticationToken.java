@@ -29,6 +29,11 @@ public class CustomJwtAuthenticationToken extends JwtAuthenticationToken {
   }
 
   @Override
+  public String getName() {
+    return principal == null ? null : String.valueOf(principal.id());
+  }
+
+  @Override
   public Object getPrincipal() {
     return principal;
   }
