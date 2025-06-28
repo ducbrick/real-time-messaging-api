@@ -60,7 +60,7 @@ public class UserPersistenceService {
     AuthServerUsrInfo userInfo = authServer.getUserInfo(jwt.getTokenValue());
     Map<String, Object> claims = jwt.getClaims();
 
-    String name = userInfo.name();
+    String name = userInfo.nickname();
     String email = userInfo.email();
     String issuer = String.valueOf(claims.getOrDefault("iss", ""));
     String sub = String.valueOf(claims.getOrDefault("sub", ""));
