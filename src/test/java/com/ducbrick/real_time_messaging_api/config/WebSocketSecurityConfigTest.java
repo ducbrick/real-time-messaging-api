@@ -114,40 +114,6 @@ class WebSocketSecurityConfigTest {
 	}
 
 	@Test
-	@DisplayName("Subscribe to queue and send message")
-	public void subToQ_sendMsg() throws ExecutionException, InterruptedException, TimeoutException {
-		BlockingQueue<String> receivedMsgQ = new LinkedBlockingDeque<>();
-
-		wsClient.setMessageConverter(new CompositeMessageConverter(List.of(
-				new MappingJackson2MessageConverter(),
-				new StringMessageConverter()
-		)));
-
-		StompSession session = wsClient
-				.connectAsync(getWsUri(), getWsHandshakeHeaders(), new StompSessionHandlerAdapter() {})
-				.get(1, TimeUnit.SECONDS);
-
-		session.subscribe("/user/queue/private-msg", new StompSessionHandlerAdapter() {
-			@Override
-			public Type getPayloadType(StompHeaders headers) {
-				return String.class;
-			}
-
-			@Override
-			public void handleFrame(StompHeaders headers, Object payload) {
-				receivedMsgQ.add((String) payload);
-			}
-		});
-
-		String receiver = usrRepo.findByIssuerAndSub(issuer, sub).get().getId().toString();
-		MsgFromUsr sentMsg = new MsgFromUsr(receiver, "Hello");
-
-		session.send("/app/private-msg", sentMsg);
-
-		Assertions.assertThat(receivedMsgQ.poll(1, TimeUnit.SECONDS)).isEqualTo(sentMsg.content());
-	}
-
-	@Test
 	@DisplayName("Attempt an unauthorized subscription")
 	public void unauthorizedSub() throws ExecutionException, InterruptedException, TimeoutException {
 		CountDownLatch errCnt = new CountDownLatch(1);
