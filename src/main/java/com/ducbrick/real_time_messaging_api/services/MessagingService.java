@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -45,6 +46,20 @@ public class MessagingService {
 	public List<@NotNull @Valid MsgToUsr> saveNewMsg(@NotNull @Valid MsgFromUsr msg) throws IllegalMessageReceiverException {
 		verifyReceiverExistence(msg);
 		ensureNoSelfMessaging(msg);
-		return null;
+
+		int senderId = Integer.parseInt(SecurityContextHolder.getContext().getAuthentication().getName());
+
+		List<MsgToUsr> outGoingMsgs = msg
+				.receiversIds()
+				.stream()
+				.map(receiverId -> MsgToUsr
+						.builder()
+						.content(msg.content())
+						.senderId(senderId)
+						.receiverId(receiverId)
+						.build())
+				.toList();
+
+		return outGoingMsgs;
 	}
 }
