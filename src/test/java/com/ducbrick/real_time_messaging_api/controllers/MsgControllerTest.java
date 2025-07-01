@@ -181,11 +181,11 @@ class MsgControllerTest {
 
 		senderSession.send("/app/private-msg", msg);
 
-		await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-			for (int i = 0; i < receivers.size(); i++) {
-				MockUser receiver = receivers.get(i);
-				CompletableFuture<MsgToUsr> receivedMsgFuture = receivedMsgs.get(i);
+		for (int i = 0; i < receivers.size(); i++) {
+			MockUser receiver = receivers.get(i);
+			CompletableFuture<MsgToUsr> receivedMsgFuture = receivedMsgs.get(i);
 
+			await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
 				assertThat(receivedMsgFuture.isDone()).isTrue();
 
 				MsgToUsr receivedMsg = receivedMsgFuture.resultNow();
@@ -193,7 +193,7 @@ class MsgControllerTest {
 				assertThat(receivedMsg.content()).isEqualTo(msgContent);
 				assertThat(receivedMsg.senderId()).isEqualTo(sender.usr().getId());
 				assertThat(receivedMsg.receiverId()).isEqualTo(receiver.usr().getId());
-			}
-		});
+			});
+		}
 	}
 }
