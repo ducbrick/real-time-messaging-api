@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -137,9 +138,9 @@ class MsgControllerTest {
 	@DisplayName("One sender sends a message to multiple receivers")
 	public void oneSender_multipleReceivers() throws ExecutionException, InterruptedException, TimeoutException {
 		MockUser sender = generateMockUsr();
-		List<MockUser> receivers = IntStream
-				.range(0, 3)
-				.mapToObj(index -> generateMockUsr())
+		List<MockUser> receivers = Stream
+				.generate(this::generateMockUsr)
+				.limit(3)
 				.toList();
 
 		String msgContent = "xyz";
