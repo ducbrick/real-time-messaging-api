@@ -19,6 +19,8 @@ import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -73,6 +75,11 @@ class MsgControllerTest {
 								))
 						)
 				);
+
+		ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+		taskScheduler.afterPropertiesSet();
+
+		wsClient.setTaskScheduler(taskScheduler);
 	}
 
 	@AfterEach
@@ -179,7 +186,8 @@ class MsgControllerTest {
 				receivers.stream().map(receiver -> receiver.usr().getId()).toList()
 		);
 
-		senderSession.send("/app/private-msg", msg);
+		senderSession.setAutoReceipt(true);
+		assertThat(senderSession.send("/app/private-msg", msg)).isNotNull();
 
 		for (int i = 0; i < receivers.size(); i++) {
 			MockUser receiver = receivers.get(i);
@@ -195,5 +203,36 @@ class MsgControllerTest {
 				assertThat(receivedMsg.receiverId()).isEqualTo(receiver.usr().getId());
 			});
 		}
+	}
+
+	@Test
+	@DisplayName("User attempts to send a message to themselves")
+	public void msgToOneSelf() throws ExecutionException, InterruptedException, TimeoutException {
+		MockUser usr = generateMockUsr();
+
+		wsClient.setMessageConverter(new MappingJackson2MessageConverter());
+
+		StompSession session = wsClient
+				.connectAsync(getWsUri(), getWsHandshakeHeaders(usr), new StompSessionHandlerAdapter() {})
+				.get(1, TimeUnit.SECONDS);
+
+		session.subscribe("/user/queue/private-msg", new StompFrameHandler() {
+			@Override
+			public Type getPayloadType(StompHeaders headers) {
+				return MsgToUsr.class;
+			}
+
+			@Override
+			public void handleFrame(StompHeaders headers, Object payload) {
+				throw new RuntimeException();
+			}
+		});
+
+		MsgFromUsr payload = new MsgFromUsr("xyz", List.of(usr.usr().getId()));
+
+		session.setAutoReceipt(true);
+		StompSession.Receiptable receipt = session.send("/app/private-msg", payload);
+
+		assertThat(receipt.getReceiptId()).isNotNull();
 	}
 }
