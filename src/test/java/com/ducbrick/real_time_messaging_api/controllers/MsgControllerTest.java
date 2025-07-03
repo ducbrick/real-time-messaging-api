@@ -4,6 +4,7 @@ import com.ducbrick.real_time_messaging_api.dtos.MsgFromUsr;
 import com.ducbrick.real_time_messaging_api.dtos.MsgToUsr;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
+import com.ducbrick.real_time_messaging_api.testutils.Generator;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -42,8 +43,11 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.ducbrick.real_time_messaging_api.testutils.Generator.generateRandomEmail;
+import static com.ducbrick.real_time_messaging_api.testutils.Generator.generateRandomString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class MsgControllerTest {
@@ -90,28 +94,20 @@ class MsgControllerTest {
 		}
 	}
 
-	private String generateRandomString(int length) {
-		return new Random()
-				.ints('a', 'z' + 1)
-				.limit(length)
-				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-				.toString();
-	}
 	private MockUser generateMockUsr() {
 		String jwtVal = generateRandomString(10);
 
 		User usr = usrRepo.save(User
 				.builder()
 				.name(generateRandomString(5))
-				.email(generateRandomString(5) + "@gmail.com")
+				.email(generateRandomEmail(5))
 				.idProviderId(generateRandomString(10))
 				.idProviderUrl("https://ducbrick.us.auth0.com")
 				.build()
 		);
 
-		Mockito
-				.when(jwtDecoder.decode(jwtVal))
-				.thenReturn(Jwt
+		when(jwtDecoder.decode(jwtVal)).thenReturn(
+				Jwt
 						.withTokenValue(jwtVal)
 						.header("alg", "none")
 						.issuer(usr.getIdProviderUrl())
