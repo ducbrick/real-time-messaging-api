@@ -107,4 +107,5 @@ class MsgRepoTest {
 			assertThat(receiver.getReceivedMsgs()).isNotEmpty();
 			assertThat(receiver.getReceivedMsgs()).anyMatch(receivedMsg -> receivedMsg.getId().equals(msgId));
 		}
-	}}
+	}
+}
