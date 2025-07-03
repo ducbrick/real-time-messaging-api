@@ -2,9 +2,12 @@ package com.ducbrick.real_time_messaging_api.controllers;
 
 import com.ducbrick.real_time_messaging_api.dtos.MsgFromUsr;
 import com.ducbrick.real_time_messaging_api.dtos.MsgToUsr;
+import com.ducbrick.real_time_messaging_api.entities.Message;
 import com.ducbrick.real_time_messaging_api.entities.User;
+import com.ducbrick.real_time_messaging_api.repos.MsgRepo;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import com.ducbrick.real_time_messaging_api.testutils.Generator;
+import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -25,6 +28,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -60,7 +67,13 @@ class MsgControllerTest {
 	private Integer port;
 
 	@Autowired
+	private TransactionTemplate transactionTemplate;
+
+	@Autowired
 	private UserRepo usrRepo;
+
+	@Autowired
+	private MsgRepo msgRepo;
 
 	@MockitoBean
 	private JwtDecoder jwtDecoder;
@@ -89,9 +102,26 @@ class MsgControllerTest {
 
 	@AfterEach
 	public void cleanUp() {
-		for (MockUser mockUser : mockUsers) {
-			usrRepo.deleteById(mockUser.usr().getId());
-		}
+		transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				for (MockUser mockUsr : mockUsers) {
+					User usr = usrRepo.findById(mockUsr.usr.getId()).orElse(null);
+
+					if (usr == null) {
+						continue;
+					}
+
+					for (Message msg : usr.getReceivedMsgs()) {
+						msgRepo.delete(msg);
+					}
+				}
+
+				for (MockUser mockUsr : mockUsers) {
+					usrRepo.deleteById(mockUsr.usr.getId());
+				}
+			}
+		});
 	}
 
 	private MockUser generateMockUsr() {
