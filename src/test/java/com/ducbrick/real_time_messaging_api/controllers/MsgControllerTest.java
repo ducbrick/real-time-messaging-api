@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +29,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
@@ -54,7 +56,7 @@ import static com.ducbrick.real_time_messaging_api.testutils.Generator.generateR
 import static com.ducbrick.real_time_messaging_api.testutils.Generator.generateRandomString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class MsgControllerTest {
@@ -72,7 +74,7 @@ class MsgControllerTest {
 	@Autowired
 	private UserRepo usrRepo;
 
-	@Autowired
+	@MockitoSpyBean
 	private MsgRepo msgRepo;
 
 	@MockitoBean
@@ -229,6 +231,18 @@ class MsgControllerTest {
 				assertThat(receivedMsg.senderId()).isEqualTo(sender.usr().getId());
 				assertThat(receivedMsg.receiverId()).isEqualTo(receiver.usr().getId());
 			});
+		}
+
+		ArgumentCaptor<Message> msgArgCaptor = ArgumentCaptor.forClass(Message.class);
+
+		verify(msgRepo, times((1))).save(msgArgCaptor.capture());
+
+		Message savedMsg = msgArgCaptor.getValue();
+
+		assertThat(savedMsg.getContent()).isEqualTo(msgContent);
+		assertThat(savedMsg.getSender().getId()).isEqualTo(sender.usr.getId());
+		for (MockUser receiver : receivers) {
+			assertThat(savedMsg.getReceivers()).anyMatch(r -> r.getId().equals(receiver.usr.getId()));
 		}
 	}
 
