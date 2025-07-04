@@ -53,13 +53,7 @@ public class MessagingService {
 				.builder()
 				.sender(usrRepo.findById(senderId).orElseThrow())
 				.content(msgDto.content())
-				.receivers(
-						msgDto
-								.receiversIds()
-								.stream()
-								.map(id -> usrRepo.findById(id).orElseThrow())
-								.toList()
-				)
+				.receivers(usrRepo.findAllById(msgDto.receiversIds()))
 				.build();
 
 		msgRepo.save(msgEntity);
