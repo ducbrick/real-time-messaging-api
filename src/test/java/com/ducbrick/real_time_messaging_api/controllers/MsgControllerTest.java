@@ -115,6 +115,8 @@ class MsgControllerTest {
 					}
 
 					for (Message msg : usr.getReceivedMsgs()) {
+						msg.setSender(null);
+						msg.getReceivers().clear();
 						msgRepo.delete(msg);
 					}
 				}
