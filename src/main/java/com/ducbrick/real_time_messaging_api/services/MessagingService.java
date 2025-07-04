@@ -2,13 +2,16 @@ package com.ducbrick.real_time_messaging_api.services;
 
 import com.ducbrick.real_time_messaging_api.dtos.MsgFromUsr;
 import com.ducbrick.real_time_messaging_api.dtos.MsgToUsr;
+import com.ducbrick.real_time_messaging_api.entities.Message;
 import com.ducbrick.real_time_messaging_api.exceptions.IllegalMessageReceiverException;
+import com.ducbrick.real_time_messaging_api.repos.MsgRepo;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
@@ -19,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessagingService {
 	private final UserRepo usrRepo;
+	private final MsgRepo msgRepo;
 
 	private void verifyReceiverExistence(@NotNull @Valid MsgFromUsr msg) throws IllegalMessageReceiverException {
 		List<Integer> receiversIds = msg.receiversIds();
@@ -41,12 +45,27 @@ public class MessagingService {
 		}
 	}
 
+	@Transactional
+	private void saveNewMsgToDb(@NotNull @Valid MsgFromUsr msgDto) throws IllegalMessageReceiverException {
+		int senderId = Integer.parseInt(SecurityContextHolder.getContext().getAuthentication().getName());
+
+		Message msgEntity = Message
+				.builder()
+				.sender(usrRepo.findById(senderId).orElseThrow(() -> new IllegalMessageReceiverException("Sending a message to oneself is not supported")))
+				.content(msgDto.content())
+				.receivers(usrRepo.findAllById(msgDto.receiversIds()))
+				.build();
+
+		if (msgEntity.getReceivers().size() != msgDto.receiversIds().size()) {
+			throw new IllegalMessageReceiverException("Unable to find specified message receiver(s)");
+		}
+
+		msgRepo.save(msgEntity);
+	}
+
 	@NotNull
 	@Valid
-	public List<@NotNull @Valid MsgToUsr> saveNewMsg(@NotNull @Valid MsgFromUsr msg) throws IllegalMessageReceiverException {
-		verifyReceiverExistence(msg);
-		ensureNoSelfMessaging(msg);
-
+	private List<@NotNull @Valid MsgToUsr> generateOutGoingMsgs(@NotNull @Valid MsgFromUsr msg) {
 		int senderId = Integer.parseInt(SecurityContextHolder.getContext().getAuthentication().getName());
 
 		List<MsgToUsr> outGoingMsgs = msg
@@ -61,5 +80,14 @@ public class MessagingService {
 				.toList();
 
 		return outGoingMsgs;
+	}
+
+	@NotNull
+	@Valid
+	public List<@NotNull @Valid MsgToUsr> saveNewMsg(@NotNull @Valid MsgFromUsr msg) throws IllegalMessageReceiverException {
+		verifyReceiverExistence(msg);
+		ensureNoSelfMessaging(msg);
+		saveNewMsgToDb(msg);
+		return generateOutGoingMsgs(msg);
 	}
 }

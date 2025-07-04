@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "app_user")
 @Builder
@@ -30,4 +32,10 @@ public class User {
   @Column(name = "id_provider_id")
   @NotBlank
   private String idProviderId;
+
+  @OneToMany(mappedBy = "sender", cascade = {CascadeType.REMOVE})
+  private List<Message> sentMsgs;
+
+  @ManyToMany(mappedBy = "receivers")
+  private List<Message> receivedMsgs;
 }
