@@ -46,15 +46,19 @@ public class MessagingService {
 	}
 
 	@Transactional
-	private void saveNewMsgToDb(@NotNull @Valid MsgFromUsr msgDto) {
+	private void saveNewMsgToDb(@NotNull @Valid MsgFromUsr msgDto) throws IllegalMessageReceiverException {
 		int senderId = Integer.parseInt(SecurityContextHolder.getContext().getAuthentication().getName());
 
 		Message msgEntity = Message
 				.builder()
-				.sender(usrRepo.findById(senderId).orElseThrow())
+				.sender(usrRepo.findById(senderId).orElseThrow(() -> new IllegalMessageReceiverException("Sending a message to oneself is not supported")))
 				.content(msgDto.content())
 				.receivers(usrRepo.findAllById(msgDto.receiversIds()))
 				.build();
+
+		if (msgEntity.getReceivers().size() != msgDto.receiversIds().size()) {
+			throw new IllegalMessageReceiverException("Unable to find specified message receiver(s)");
+		}
 
 		msgRepo.save(msgEntity);
 	}
