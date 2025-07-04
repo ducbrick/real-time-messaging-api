@@ -31,7 +31,8 @@ public class WebSecurityConfig {
 						.jwtAuthenticationConverter(new CustomJwtAuthenticationConverter(jwtGrantedAuthoritiesConverter, userPersistenceService)))
 				)
 				.authorizeHttpRequests(auth -> auth
-					.anyRequest().access(allOf(hasScope("openid"), hasScope("profile"), hasScope("email")))
+						.requestMatchers("/public/**").permitAll()
+						.anyRequest().access(allOf(hasScope("openid"), hasScope("profile"), hasScope("email")))
 				);
 
 		return http.build();

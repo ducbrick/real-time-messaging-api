@@ -18,6 +18,7 @@ spring:
 logging:
   level:
     org.springframework.messaging: TRACE
+    org.springframework.web: TRACE
 
 app:
   auth-server:
