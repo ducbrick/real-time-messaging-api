@@ -275,5 +275,6 @@ class MsgControllerTest {
 		StompSession.Receiptable receipt = session.send("/app/private-msg", payload);
 
 		assertThat(receipt.getReceiptId()).isNotNull();
+		verify(msgRepo, times(0)).save(any());
 	}
 }
