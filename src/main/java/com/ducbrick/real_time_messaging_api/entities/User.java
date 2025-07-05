@@ -33,7 +33,7 @@ public class User {
   @NotBlank
   private String idProviderId;
 
-  @OneToMany(mappedBy = "sender", cascade = {CascadeType.REMOVE})
+  @OneToMany(mappedBy = "sender")
   private List<Message> sentMsgs;
 
   @ManyToMany(mappedBy = "receivers")

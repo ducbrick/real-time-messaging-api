@@ -14,4 +14,19 @@ public interface UserRepo extends JpaRepository <User, Integer> {
       WHERE u.idProviderUrl = :issuer AND u.idProviderId = :sub
       """)
   Optional<User> findByIssuerAndSub(@Param("issuer") String issuer, @Param("sub") String sub);
+
+  @Query("""
+      SELECT SIZE(u.sentMsgs)
+      FROM User u
+      WHERE u.id = :id
+      """)
+  int countSentMsgs(int id);
+
+  @Query("""
+      SELECT SIZE(u.receivedMsgs)
+      FROM User u
+      WHERE u.id = :id
+      """)
+  int countReceivedMsgs(int id);
+
 }

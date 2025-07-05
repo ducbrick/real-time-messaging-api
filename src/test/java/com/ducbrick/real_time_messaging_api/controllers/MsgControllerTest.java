@@ -7,6 +7,7 @@ import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.MsgRepo;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import com.ducbrick.real_time_messaging_api.testutils.Generator;
+import com.ducbrick.real_time_messaging_api.testutils.MockUser;
 import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
@@ -52,18 +53,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.ducbrick.real_time_messaging_api.testutils.Generator.generateRandomEmail;
-import static com.ducbrick.real_time_messaging_api.testutils.Generator.generateRandomString;
+import static com.ducbrick.real_time_messaging_api.testutils.Generator.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class MsgControllerTest {
-	private record MockUser(
-			String jwtVal,
-			User usr
-	) {}
 
 	@LocalServerPort
 	private Integer port;
@@ -108,7 +104,7 @@ class MsgControllerTest {
 			@Override
 			protected void doInTransactionWithoutResult(TransactionStatus status) {
 				for (MockUser mockUsr : mockUsers) {
-					User usr = usrRepo.findById(mockUsr.usr.getId()).orElse(null);
+					User usr = usrRepo.findById(mockUsr.usr().getId()).orElse(null);
 
 					if (usr == null) {
 						continue;
@@ -122,36 +118,10 @@ class MsgControllerTest {
 				}
 
 				for (MockUser mockUsr : mockUsers) {
-					usrRepo.deleteById(mockUsr.usr.getId());
+					usrRepo.deleteById(mockUsr.usr().getId());
 				}
 			}
 		});
-	}
-
-	private MockUser generateMockUsr() {
-		String jwtVal = generateRandomString(10);
-
-		User usr = usrRepo.save(User
-				.builder()
-				.name(generateRandomString(5))
-				.email(generateRandomEmail(5))
-				.idProviderId(generateRandomString(10))
-				.idProviderUrl("https://ducbrick.us.auth0.com")
-				.build()
-		);
-
-		when(jwtDecoder.decode(jwtVal)).thenReturn(
-				Jwt
-						.withTokenValue(jwtVal)
-						.header("alg", "none")
-						.issuer(usr.getIdProviderUrl())
-						.subject(usr.getIdProviderId())
-						.claim("scope", "openid profile email")
-						.build());
-
-		MockUser mockUser = new MockUser(jwtVal, usr);
-		mockUsers.add(mockUser);
-		return mockUser;
 	}
 
 	private String getWsUri() {
@@ -160,16 +130,16 @@ class MsgControllerTest {
 
 	private WebSocketHttpHeaders getWsHandshakeHeaders(MockUser mockUsr) {
 		WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-		headers.add("Authorization", String.format("Bearer %s", mockUsr.jwtVal));
+		headers.add("Authorization", String.format("Bearer %s", mockUsr.jwtVal()));
 		return headers;
 	}
 
 	@Test
 	@DisplayName("One sender sends a message to multiple receivers")
 	public void oneSender_multipleReceivers() throws ExecutionException, InterruptedException, TimeoutException {
-		MockUser sender = generateMockUsr();
+		MockUser sender = generateMockUsr(jwtDecoder, usrRepo, mockUsers);
 		List<MockUser> receivers = Stream
-				.generate(this::generateMockUsr)
+				.generate(() -> generateMockUsr(jwtDecoder, usrRepo, mockUsers))
 				.limit(3)
 				.toList();
 
@@ -242,16 +212,16 @@ class MsgControllerTest {
 		Message savedMsg = msgArgCaptor.getValue();
 
 		assertThat(savedMsg.getContent()).isEqualTo(msgContent);
-		assertThat(savedMsg.getSender().getId()).isEqualTo(sender.usr.getId());
+		assertThat(savedMsg.getSender().getId()).isEqualTo(sender.usr().getId());
 		for (MockUser receiver : receivers) {
-			assertThat(savedMsg.getReceivers()).anyMatch(r -> r.getId().equals(receiver.usr.getId()));
+			assertThat(savedMsg.getReceivers()).anyMatch(r -> r.getId().equals(receiver.usr().getId()));
 		}
 	}
 
 	@Test
 	@DisplayName("User attempts to send a message to themselves")
 	public void msgToOneSelf() throws ExecutionException, InterruptedException, TimeoutException {
-		MockUser usr = generateMockUsr();
+		MockUser usr = generateMockUsr(jwtDecoder, usrRepo, mockUsers);
 
 		wsClient.setMessageConverter(new MappingJackson2MessageConverter());
 
