@@ -64,7 +64,7 @@ class UsrControllerTest {
 		assertThat(resDto.issuer()).isEqualTo(usr.getIdProviderUrl());
 		assertThat(resDto.sub()).isEqualTo(usr.getIdProviderId());
 		assertThat(resDto.numOfSentMsgs()).isEqualTo(usrRepo.countSentMsgs(usr.getId()));
-		assertThat(resDto.numOfSentMsgs()).isEqualTo(usrRepo.countReceivedMsgs(usr.getId()));
+		assertThat(resDto.numOfReceivedMsgs()).isEqualTo(usrRepo.countReceivedMsgs(usr.getId()));
 	}
 
 	@Test
@@ -90,7 +90,7 @@ class UsrControllerTest {
 		assertThat(resDto.issuer()).isEqualTo(usr.getIdProviderUrl());
 		assertThat(resDto.sub()).isEqualTo(usr.getIdProviderId());
 		assertThat(resDto.numOfSentMsgs()).isEqualTo(usrRepo.countSentMsgs(usr.getId()));
-		assertThat(resDto.numOfSentMsgs()).isEqualTo(usrRepo.countReceivedMsgs(usr.getId()));
+		assertThat(resDto.numOfReceivedMsgs()).isEqualTo(usrRepo.countReceivedMsgs(usr.getId()));
 	}
 
 	@Test
@@ -115,6 +115,6 @@ class UsrControllerTest {
 		assertThat(resDto.issuer()).isEqualTo(usr.getIdProviderUrl());
 		assertThat(resDto.sub()).isEqualTo(usr.getIdProviderId());
 		assertThat(resDto.numOfSentMsgs()).isEqualTo(usrRepo.countSentMsgs(usr.getId()));
-		assertThat(resDto.numOfSentMsgs()).isEqualTo(usrRepo.countReceivedMsgs(usr.getId()));
+		assertThat(resDto.numOfReceivedMsgs()).isEqualTo(usrRepo.countReceivedMsgs(usr.getId()));
 	}
 }
