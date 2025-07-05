@@ -4,6 +4,8 @@ import com.ducbrick.real_time_messaging_api.dtos.UsrInfoDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.exceptions.NoSuchUsrE;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +17,8 @@ public class UsrService {
 
 	private final UserRepo usrRepo;
 
+	@NotNull
+	@Valid
 	public UsrInfoDto getUsrInfoById(int id) {
 		return usrInfoDtoMapper(
 				usrRepo.findById(id)
@@ -30,7 +34,9 @@ public class UsrService {
 		return null;
 	}
 
-	private UsrInfoDto usrInfoDtoMapper(User usr) {
+	@NotNull
+	@Valid
+	private UsrInfoDto usrInfoDtoMapper(@NotNull @Valid User usr) {
 		return UsrInfoDto
 				.builder()
 				.id(usr.getId())
