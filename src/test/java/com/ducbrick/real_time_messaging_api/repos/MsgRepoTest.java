@@ -9,10 +9,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
+import org.springframework.data.support.WindowIterator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.ducbrick.real_time_messaging_api.testutils.Generator.generateRandomEmail;
@@ -107,5 +112,45 @@ class MsgRepoTest {
 			assertThat(receiver.getReceivedMsgs()).isNotEmpty();
 			assertThat(receiver.getReceivedMsgs()).anyMatch(receivedMsg -> receivedMsg.getId().equals(msgId));
 		}
+	}
+
+	@Test
+	@DisplayName("Scroll through messaging history")
+	public void scrollMsgHistory() {
+		User sender = usrRepo.save(generateNewUser());
+		List<User> receivers = Stream
+				.generate(() -> usrRepo.save(generateNewUser()))
+				.limit(3)
+				.toList();
+
+		int msgCount = 10;
+
+		for (int i = 0; i < msgCount; i++) {
+			msgRepo.save(
+						Message
+								.builder()
+								.content(String.valueOf(i))
+								.sender(sender)
+								.receivers(receivers)
+								.build()
+				);
+		}
+
+		List<Message> history = msgRepo.getMsgHistory(sender.getId(), receivers.getFirst().getId(), Limit.of(2));
+
+		int cursor = 0;
+		int expectedMsgContent = msgCount - 1;
+
+		while (history.isEmpty() == false) {
+			for (Message msg : history) {
+				assertThat(msg.getContent()).isEqualTo(String.valueOf(expectedMsgContent));
+				expectedMsgContent--;
+				cursor = msg.getId();
+			}
+
+			history = msgRepo.getMsgHistory(sender.getId(), receivers.getFirst().getId(), cursor,Limit.of(2));
+		}
+
+		assertThat(expectedMsgContent).isEqualTo(-1);
 	}
 }
