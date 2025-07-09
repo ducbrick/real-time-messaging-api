@@ -20,7 +20,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
@@ -45,10 +47,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -223,7 +222,11 @@ class MsgControllerTest {
 	public void msgToOneSelf() throws ExecutionException, InterruptedException, TimeoutException {
 		MockUser usr = generateMockUsr(jwtDecoder, usrRepo, mockUsers);
 
-		wsClient.setMessageConverter(new MappingJackson2MessageConverter());
+		wsClient.setMessageConverter(new CompositeMessageConverter(
+				List.of(
+						new MappingJackson2MessageConverter(),
+						new StringMessageConverter())
+				));
 
 		StompSession session = wsClient
 				.connectAsync(getWsUri(), getWsHandshakeHeaders(usr), new StompSessionHandlerAdapter() {})
@@ -241,6 +244,20 @@ class MsgControllerTest {
 			}
 		});
 
+		CountDownLatch errCnt = new CountDownLatch(1);
+
+		session.subscribe("/user/queue/error", new StompFrameHandler() {
+			@Override
+			public Type getPayloadType(StompHeaders headers) {
+				return String.class;
+			}
+
+			@Override
+			public void handleFrame(StompHeaders headers, Object payload) {
+				errCnt.countDown();
+			}
+		});
+
 		MsgFromUsr payload = new MsgFromUsr("xyz", List.of(usr.usr().getId()));
 
 		session.setAutoReceipt(true);
@@ -248,5 +265,6 @@ class MsgControllerTest {
 
 		assertThat(receipt.getReceiptId()).isNotNull();
 		verify(msgRepo, times(0)).save(any());
+		assertThat(errCnt.await(1, TimeUnit.SECONDS)).isTrue();
 	}
 }

@@ -5,6 +5,7 @@ import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.exceptions.NoSuchUsrE;
 import com.ducbrick.real_time_messaging_api.exceptions.UnauthenticatedE;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
+import com.ducbrick.real_time_messaging_api.services.auth.AuthPrincipalService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -19,11 +20,12 @@ import org.springframework.validation.annotation.Validated;
 @RequiredArgsConstructor
 public class UsrService {
 
+	private final AuthPrincipalService authPrincipalService;
 	private final UserRepo usrRepo;
 
 	@NotNull
 	@Valid
-	public UsrInfoDto getUsrInfoById(int id) {
+	public UsrInfoDto getUsrInfoById(int id) throws NoSuchUsrE {
 		return usrInfoDtoMapper(
 				usrRepo.findById(id)
 						.orElseThrow(() -> new NoSuchUsrE("User with id " + id + " doesn't exist"))
@@ -32,7 +34,7 @@ public class UsrService {
 
 	@NotNull
 	@Valid
-	public UsrInfoDto getUsrInfoByIssuerAndSub(@NotEmpty String issuer, @NotEmpty String sub) {
+	public UsrInfoDto getUsrInfoByIssuerAndSub(@NotEmpty String issuer, @NotEmpty String sub) throws NoSuchUsrE {
 		return usrInfoDtoMapper(
 				usrRepo.findByIssuerAndSub(issuer, sub)
 						.orElseThrow(() -> new NoSuchUsrE("User who is subject " + sub + " by issuer " + issuer + " doesn't exist"))
@@ -41,14 +43,8 @@ public class UsrService {
 
 	@NotNull
 	@Valid
-	public UsrInfoDto getAuthenticatedUsr() throws UnauthenticatedE {
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-		if (auth == null) {
-			throw new UnauthenticatedE("Attempting to get self information while being unauthenticated");
-		}
-
-		return getUsrInfoById(Integer.parseInt(auth.getName()));
+	public UsrInfoDto getAuthenticatedUsr() throws UnauthenticatedE, NoSuchUsrE {
+		return getUsrInfoById(authPrincipalService.getPrincipal().id());
 	}
 
 	@NotNull

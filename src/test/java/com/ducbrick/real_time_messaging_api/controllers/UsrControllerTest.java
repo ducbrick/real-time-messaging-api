@@ -117,4 +117,36 @@ class UsrControllerTest {
 		assertThat(resDto.numOfSentMsgs()).isEqualTo(usrRepo.countSentMsgs(usr.getId()));
 		assertThat(resDto.numOfReceivedMsgs()).isEqualTo(usrRepo.countReceivedMsgs(usr.getId()));
 	}
+
+	@Test
+	@DisplayName("Get user info without id, sub or authentication")
+	@Transactional
+	public void getUsrInfoWithoutAnything() throws Exception {
+		mvc
+				.perform(get("/public/user/info"))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@DisplayName("Get user info by incorrect id")
+	@Transactional
+	public void getUsrInfoByIncorrectId() throws Exception {
+		mvc
+				.perform(get("/public/user/info")
+						.param("id", String.valueOf(-1))
+				)
+				.andExpect(status().isNoContent());
+	}
+
+	@Test
+	@DisplayName("Get user info by incorrect issuer and sub")
+	@Transactional
+	public void getUsrInfoByIncorrectIssuerAndSub() throws Exception {
+		mvc
+				.perform(get("/public/user/info")
+						.param("issuer", Generator.generateRandomString(10))
+						.param("sub", Generator.generateRandomString(10))
+				)
+				.andExpect(status().isNoContent());
+	}
 }

@@ -17,6 +17,7 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
 		msg
 				.simpMessageDestMatchers("/app/private-msg").authenticated()
 				.simpSubscribeDestMatchers("/user/queue/private-msg").authenticated()
+				.simpSubscribeDestMatchers("/user/queue/error").authenticated()
 				.simpTypeMatchers(SimpMessageType.SUBSCRIBE).denyAll()
 				.simpTypeMatchers(SimpMessageType.MESSAGE).denyAll()
 				.anyMessage().authenticated();

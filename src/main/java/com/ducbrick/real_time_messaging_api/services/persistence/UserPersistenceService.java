@@ -1,14 +1,13 @@
 package com.ducbrick.real_time_messaging_api.services.persistence;
 
 import com.ducbrick.real_time_messaging_api.dtos.AuthServerUsrInfo;
-import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
+import com.ducbrick.real_time_messaging_api.dtos.UserCredentialDto;
 import com.ducbrick.real_time_messaging_api.entities.User;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import com.ducbrick.real_time_messaging_api.services.proxies.AuthServerProxy;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,7 @@ public class UserPersistenceService {
   private final UserRepo userRepo;
   private final Validator validator;
 
-  public Optional<UserDetailsDto> getByIssuerAndSub(@NotNull Jwt jwt) {
+  public Optional<UserCredentialDto> getByIssuerAndSub(@NotNull Jwt jwt) {
     Map<String, Object> claims = jwt.getClaims();
 
     String issuer = String.valueOf(claims.getOrDefault("iss", ""));
@@ -45,7 +44,7 @@ public class UserPersistenceService {
     }
 
     //TODO: Update user info after a period of time
-    UserDetailsDto userDto = UserDetailsDto
+    UserCredentialDto userDto = UserCredentialDto
         .builder()
         .id(user.getId())
         .name(user.getName())
@@ -56,7 +55,7 @@ public class UserPersistenceService {
   }
 
   @Transactional
-  public UserDetailsDto saveNewByJwt(@NotNull Jwt jwt) {
+  public UserCredentialDto saveNewByJwt(@NotNull Jwt jwt) {
     AuthServerUsrInfo userInfo = authServer.getUserInfo(jwt.getTokenValue());
     Map<String, Object> claims = jwt.getClaims();
 
@@ -82,7 +81,7 @@ public class UserPersistenceService {
 
     user = userRepo.save(user);
 
-    return UserDetailsDto
+    return UserCredentialDto
         .builder()
         .id(user.getId())
         .name(name)

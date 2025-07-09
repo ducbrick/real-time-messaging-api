@@ -1,29 +1,21 @@
 package com.ducbrick.real_time_messaging_api.config;
 
 import com.ducbrick.real_time_messaging_api.dtos.AuthServerUsrInfo;
-import com.ducbrick.real_time_messaging_api.dtos.UserDetailsDto;
-import com.ducbrick.real_time_messaging_api.entities.User;
+import com.ducbrick.real_time_messaging_api.dtos.UserCredentialDto;
 import com.ducbrick.real_time_messaging_api.repos.UserRepo;
 import com.ducbrick.real_time_messaging_api.services.proxies.AuthServerProxy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultHandlers;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -34,18 +26,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultHandlers.exportTestSecurityContext;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 
 @SpringBootTest
@@ -67,7 +53,7 @@ class WebSecurityTest {
 		}
 
 		@GetMapping("/principal")
-		public UserDetailsDto getPrincipal(@NotNull @AuthenticationPrincipal UserDetailsDto principal) {
+		public UserCredentialDto getPrincipal(@NotNull @AuthenticationPrincipal UserCredentialDto principal) {
 			return principal;
 		}
 
@@ -173,7 +159,7 @@ class WebSecurityTest {
 			.andExpect(status().isOk())
 			.andReturn();
 
-		UserDetailsDto principal = objectMapper.readValue(result.getResponse().getContentAsString(), UserDetailsDto.class);
+		UserCredentialDto principal = objectMapper.readValue(result.getResponse().getContentAsString(), UserCredentialDto.class);
 
 		assertThat(principal.id()).isNotNull();
 		assertThat(principal.name()).isEqualTo(name);

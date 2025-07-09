@@ -32,6 +32,7 @@ public class WebSecurityConfig {
 				)
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/public/**").permitAll()
+						.requestMatchers("/error/**").permitAll()
 						.anyRequest().access(allOf(hasScope("openid"), hasScope("profile"), hasScope("email")))
 				);
 
