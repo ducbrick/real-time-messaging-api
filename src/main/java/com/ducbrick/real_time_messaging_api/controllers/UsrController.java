@@ -4,6 +4,8 @@ import com.ducbrick.real_time_messaging_api.dtos.UsrInfoDto;
 import com.ducbrick.real_time_messaging_api.exceptions.NoSuchUsrE;
 import com.ducbrick.real_time_messaging_api.exceptions.UnauthenticatedE;
 import com.ducbrick.real_time_messaging_api.services.UsrService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "User information")
 public class UsrController {
 
 	private final UsrService usrService;

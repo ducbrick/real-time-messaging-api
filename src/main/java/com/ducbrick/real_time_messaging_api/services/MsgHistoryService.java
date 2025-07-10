@@ -23,7 +23,7 @@ public class MsgHistoryService {
 
 	@Setter
 	@Positive
-	private int scrollLimit = 2;
+	private int scrollLimit = 10;
 
 	private final MsgRepo msgRepo;
 

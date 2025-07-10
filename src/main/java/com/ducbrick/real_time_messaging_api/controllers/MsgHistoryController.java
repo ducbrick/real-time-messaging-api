@@ -2,6 +2,7 @@ package com.ducbrick.real_time_messaging_api.controllers;
 
 import com.ducbrick.real_time_messaging_api.dtos.MsgHistoryDto;
 import com.ducbrick.real_time_messaging_api.services.MsgHistoryService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Message history")
 public class MsgHistoryController {
 
 	private final MsgHistoryService msgHistoryService;

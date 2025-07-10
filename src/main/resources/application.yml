@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: ${APP_PROFILES}
+    active: ${APP_PROFILES:prod}
 
   datasource:
     url:      ${DATABASE_URL}
@@ -10,9 +10,8 @@ spring:
   security:
     oauth2:
       resourceserver:
-        userinfo-endpoint: ${OAUTH2_USERINFO_ENDPOINT}
         jwt:
-          issuer-uri: ${OAUTH2_ISSUER_URI}
+          issuer-uri: ${OAUTH2_ISSUER}
           audiences:  ${OAUTH2_AUDIENCE}
 
 logging:
@@ -23,5 +22,5 @@ logging:
 app:
   auth-server:
     access-token: ${OAUTH2_ACCESS_TOKEN}
-    url: ${OAUTH2_ISSUER_URI}
+    url: ${OAUTH2_ISSUER}
     userinfo-endpoint: ${OAUTH2_USERINFO_ENDPOINT}
