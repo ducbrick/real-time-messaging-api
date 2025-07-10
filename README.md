@@ -1,62 +1,54 @@
-# Project Title
+# Real-time messaging API
 
-Simple overview of use/purpose.
+APIs for a simple real-time messaging application. Developed with Spring Boot and Websocket.
 
-## Description
-
-An in-depth paragraph about your project and overview of use.
-
-## Getting Started
+## Setting up & Configurations
 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+* JDK 21
+* PostgreSQL as the database
+* An identity provider, preferrably Auth0
 
-### Installing
+### Cloning the repository
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
-
-### Executing program
-
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
+```bash
+git clone https://github.com/ducbrick/real-time-messaging-api.git
+cd real-time-messaging-api/
 ```
 
-## Help
+### Configurations
 
-Any advise for common problems or issues.
+#### Database
+
+* Ensure an instance of PostgreSQL is running
+* Configure your database using the provided schema, located at `sql/schema.sql`
+
+#### Identity provider
+
+This application uses Auth0 as its identity provider but configuring it to use another one is possible. 
+
+Ensure you have your authorization server URL, application audience and userinfo endpoint.
+
+#### Environment variables
+
+Provide your database and authorization server information as environment variablas. For example:
+
+
+```bash
+export DATABASE_URL=jdbc:postgresql://localhost:5432/yourdatabase
+export DATABASE_USERNAME=yourusername
+export DATABASE_PASSWORD=yourpassword
+
+export OAUTH2_ISSUER=https://youridp.auth0.com/
+export OAUTH2_AUDIENCE=youraudience
+export OAUTH2_USERINFO_ENDPOINT=/userinfo
 ```
-command to run if program contains helper info
+
+### Running the application
+
+```bash
+./mvnw spring-boot:run
 ```
 
-## Authors
-
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
-
-## Version History
-
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
-
-## License
-
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
-
-## Acknowledgments
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+The application should now be running on port `8080`
