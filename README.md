@@ -52,3 +52,21 @@ export OAUTH2_USERINFO_ENDPOINT=/userinfo
 ```
 
 The application should now be running on port `8080`
+
+## API Documentation
+
+### REST APIs
+
+This application conforms to the OpenAPI specifications. The documenation for the REST APIs can be discovered at the `/v3/api-docs` endpoint.
+
+Additionally, Swagger UI is also available at the `/swagger-ui/index.html` endpoint.
+
+### Websocket
+
+#### Handshake
+
+This application provides WebSocket support with SockJS fallback at the `/msg` endpoint. 
+
+The SockJS client begins by sending `GET /info` to obtain basic information from the server. After that, it must decide what transport to use. If possible, WebSocket is used. If not, in most browsers, there is at least one HTTP streaming option. If not, then HTTP (long) polling is used.
+
+Clients with WebSocket support can initiate the handshake at the `/msg/websocket` endpoint.
