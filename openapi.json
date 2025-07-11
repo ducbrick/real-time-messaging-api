@@ -1,0 +1,214 @@
+{
+
+      "openapi": "3.1.0",
+      "info": {
+            "title": "API Documentation",
+            "description": "API documentation for a simple real-time messaging application",
+            "contact": {
+                  "name": "ducbrick",
+                  "email": "ducbrick@gmail.com"
+            },
+            "version": "1.0.0"
+      },
+      "servers": [
+            {
+                  "url": "http://localhost:8080",
+                  "description": "Local"
+            }
+      ],
+      "security": [
+            {
+                  "OAuth2": [ ]
+            }
+      ],
+      "paths": {
+            "/public/user/info": {
+                  "get": {
+                        "tags": [
+                              "User information"
+                        ],
+                        "summary": "Get information about a user",
+                        "operationId": "getUsrInfo",
+                        "parameters": [
+                              {
+                                    "name": "id",
+                                    "in": "query",
+                                    "description": "ID of the user to get information about",
+                                    "required": false,
+                                    "schema": {
+                                          "type": "string"
+                                    }
+                              },
+                              {
+                                    "name": "sub",
+                                    "in": "query",
+                                    "description": "OAuth2 subject of the user to get information about",
+                                    "required": false,
+                                    "schema": {
+                                          "type": "string"
+                                    }
+                              },
+                              {
+                                    "name": "issuer",
+                                    "in": "query",
+                                    "description": "OAuth2 issuer of the user to get information about",
+                                    "required": false,
+                                    "schema": {
+                                          "type": "string"
+                                    }
+                              }
+                        ],
+                        "responses": {
+                              "200": {
+                                    "description": "Successfully retrieved user information",
+                                    "content": {
+                                          "*/*": {
+                                                "schema": {
+                                                      "$ref": "#/components/schemas/UsrInfoDto"
+                                                }
+                                          }
+                                    }
+                              },
+                              "204": {
+                                    "description": "Specified user does not exist",
+                                    "content": {
+                                          "*/*": {
+                                                "schema": {
+                                                      "$ref": "#/components/schemas/UsrInfoDto"
+                                                }
+                                          }
+                                    }
+                              }
+                        }
+                  }
+            },
+            "/history": {
+                  "get": {
+                        "tags": [
+                              "Message history"
+                        ],
+                        "summary": "Get the authenticated user's messaging history with another user",
+                        "operationId": "getMsgHistory",
+                        "parameters": [
+                              {
+                                    "name": "cursor",
+                                    "in": "query",
+                                    "description": "Specify the message (exclusive) to start retrieving from",
+                                    "required": false,
+                                    "schema": {
+                                          "type": "integer"
+                                    }
+                              },
+                              {
+                                    "name": "receiverId",
+                                    "in": "query",
+                                    "description": "ID of the user to get the history with",
+                                    "required": true,
+                                    "schema": {
+                                          "type": "integer"
+                                    }
+                              }
+                        ],
+                        "responses": {
+                              "200": {
+                                    "description": "OK",
+                                    "content": {
+                                          "*/*": {
+                                                "schema": {
+                                                      "$ref": "#/components/schemas/MsgHistoryDto"
+                                                }
+                                          }
+                                    }
+                              }
+                        }
+                  }
+            }
+      },
+      "components": {
+            "schemas": {
+                  "UsrInfoDto": {
+                        "type": "object",
+                        "properties": {
+                              "id": {
+                                    "type": "integer",
+                                    "format": "int32"
+                              },
+                              "name": {
+                                    "type": "string",
+                                    "minLength": 1
+                              },
+                              "email": {
+                                    "type": "string",
+                                    "minLength": 1
+                              },
+                              "issuer": {
+                                    "type": "string",
+                                    "minLength": 1
+                              },
+                              "sub": {
+                                    "type": "string",
+                                    "minLength": 1
+                              },
+                              "numOfSentMsgs": {
+                                    "type": "integer",
+                                    "format": "int32"
+                              },
+                              "numOfReceivedMsgs": {
+                                    "type": "integer",
+                                    "format": "int32"
+                              }
+                        },
+                        "required": [
+                              "email",
+                              "issuer",
+                              "name",
+                              "sub"
+                        ]
+                  },
+                  "MsgHistoryDto": {
+                        "type": "object",
+                        "properties": {
+                              "msgs": {
+                                    "type": "array",
+                                    "items": {
+                                          "$ref": "#/components/schemas/MsgToUsr"
+                                    }
+                              },
+                              "cursor": {
+                                    "type": "integer",
+                                    "format": "int32"
+                              }
+                        }
+                  },
+                  "MsgToUsr": {
+                        "type": "object",
+                        "properties": {
+                              "content": {
+                                    "type": "string",
+                                    "minLength": 1
+                              },
+                              "senderId": {
+                                    "type": "integer",
+                                    "format": "int32"
+                              },
+                              "receiverId": {
+                                    "type": "integer",
+                                    "format": "int32"
+                              }
+                        },
+                        "required": [
+                              "content"
+                        ]
+                  }
+            },
+            "securitySchemes": {
+                  "OAuth2": {
+                        "type": "http",
+                        "description": "OAuth2 bearer JWT",
+                        "scheme": "bearer",
+                        "bearerFormat": "JWT"
+                  }
+            }
+      }
+
+}
