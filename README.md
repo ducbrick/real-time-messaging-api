@@ -6,9 +6,9 @@ APIs for a simple real-time messaging application. Developed with Spring Boot an
 
 ### Dependencies
 
-* JDK 21
-* PostgreSQL as the database
-* An identity provider, preferrably Auth0
+* `JDK 21`
+* `PostgreSQL` as the database
+* An identity provider, preferrably `Auth0`
 
 ### Cloning the repository
 
@@ -21,12 +21,12 @@ cd real-time-messaging-api/
 
 #### Database
 
-* Ensure an instance of PostgreSQL is running
+* Ensure an instance of `PostgreSQL` is running
 * Configure your database using the provided schema, located at `sql/schema.sql`
 
 #### Identity provider
 
-This application uses Auth0 with opaque token (specifically JWT) as its identity provider but configuring it to use another one is possible. 
+This application uses `Auth0` with opaque token (specifically JWT) as its identity provider but configuring it to use another one is possible. 
 
 Ensure you have your authorization server URL, application audience and userinfo endpoint.
 
@@ -65,9 +65,9 @@ Additionally, Swagger UI is also available at the `/swagger-ui/index.html` endpo
 
 #### Handshake
 
-This application provides WebSocket support with SockJS fallback at the `/msg` endpoint. 
+This application provides WebSocket support with `SockJS` fallback at the `/msg` endpoint. 
 
-The SockJS client begins by sending `GET /info` to obtain basic information from the server. After that, it must decide what transport to use. If possible, WebSocket is used. If not, in most browsers, there is at least one HTTP streaming option. If not, then HTTP (long) polling is used.
+The `SockJS` client begins by sending `GET /info` to obtain basic information from the server. After that, it must decide what transport to use. If possible, WebSocket is used. If not, in most browsers, there is at least one HTTP streaming option. If not, then HTTP (long) polling is used.
 
 Clients with WebSocket support can initiate the handshake at the `/msg/websocket` endpoint.
 
