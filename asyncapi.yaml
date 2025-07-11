@@ -1,0 +1,126 @@
+asyncapi: 3.0.0
+
+info:
+  title: Real-time messaging API
+  version: 1.0.0
+  description:  APIs for a simple real-time messaging application. Developed with Spring Boot and Websocket.
+
+servers:
+  local:
+    host: localhost:8080
+    protocol: ws
+    description: Local environment
+    security:
+      - $ref: '#/components/securitySchemes/http'
+
+channels:
+  sendMessage:
+    address: /app/private-msg
+    messages:
+      MsgFromUsr:
+        $ref: '#/components/messages/MsgFromUsr'
+
+  receiveMessage:
+    address: /user/queue/private-msg
+    messages:
+      MsgToUsr:
+        $ref: '#/components/messages/MsgToUsr'
+
+  receiveError:
+    address: /user/queue/error
+    messages:
+      ErrorMessage:
+        $ref: '#/components/messages/ErrorMessage'
+
+operations:
+  sendMessage:
+    action: send
+    channel:
+      $ref: '#/channels/sendMessage'
+    summary: 
+      Send a message to other users
+    messages:
+      - $ref: '#/channels/sendMessage/messages/MsgFromUsr'
+
+  receiveMessage:
+    action: receive
+    channel:
+      $ref: '#/channels/receiveMessage'
+    summary:
+      Receive messages sent by other users
+    messages:
+      - $ref: '#/channels/receiveMessage/messages/MsgToUsr'
+
+  receiveError:
+    action: receive
+    channel:
+      $ref: '#/channels/receiveError'
+    summary:
+      Receive error messages sent back by the server
+    messages:
+      - $ref: '#/channels/receiveError/messages/ErrorMessage'
+
+components:
+  messages:
+    MsgFromUsr:
+      name: MsgFromUsr
+      title: Message from user to server
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/MsgFromUsr'
+
+    MsgToUsr:
+      name: MsgToUsr
+      title: Message from server to user
+      payload:
+        $ref: '#/components/schemas/MsgToUsr'
+
+    ErrorMessage:
+      name: ErrorMessage
+      title: Error encountered when processing client messagess
+      payload:
+        $ref: '#/components/schemas/ErrorMessage'
+
+  schemas:
+    MsgFromUsr:
+      type: object
+      required:
+        - content
+        - receiversIds
+      properties:
+        content:
+          type: string
+          description: Content of the message
+        receiversIds:
+          type: array
+          description: Ids of the receiving users of this message
+          minimum: 1
+          items:
+            type: integer
+
+    MsgToUsr:
+      type: object
+      required:
+        - content
+        - senderId
+        - receiverId
+      properties:
+        content:
+          type: string
+          description: Content of the message
+        senderId:
+          type: integer
+          description: Id of the user who sent this message
+        receiverId:
+          type: integer
+          description: Id of the receiving user
+
+    ErrorMessage:
+      type: string
+
+  securitySchemes:
+    http:
+      type: http
+      description: Provide your OAuth2 access token
+      scheme: bearer
+      bearerFormat: JWT
