@@ -57,7 +57,7 @@ The application should now be running on port `8080`
 
 ### REST APIs
 
-This application conforms to the OpenAPI specifications. The documenation for the REST APIs can be discovered at the `/v3/api-docs` endpoint.
+This application conforms to the OpenAPI specifications. The documenation for the REST APIs can be discovered at the `/v3/api-docs` endpoint or at `openapi.json`.
 
 Additionally, Swagger UI is also available at the `/swagger-ui/index.html` endpoint.
 
