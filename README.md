@@ -26,7 +26,7 @@ cd real-time-messaging-api/
 
 #### Identity provider
 
-This application uses Auth0 as its identity provider but configuring it to use another one is possible. 
+This application uses Auth0 with opaque token (specifically JWT) as its identity provider but configuring it to use another one is possible. 
 
 Ensure you have your authorization server URL, application audience and userinfo endpoint.
 
@@ -70,3 +70,13 @@ This application provides WebSocket support with SockJS fallback at the `/msg` e
 The SockJS client begins by sending `GET /info` to obtain basic information from the server. After that, it must decide what transport to use. If possible, WebSocket is used. If not, in most browsers, there is at least one HTTP streaming option. If not, then HTTP (long) polling is used.
 
 Clients with WebSocket support can initiate the handshake at the `/msg/websocket` endpoint.
+
+#### Protocol
+
+This application uses [STOMP](https://stomp.github.io/stomp-specification-1.2.html) as the WebSocket sub-protocol.
+
+#### API Documentation
+
+The documentation for this application's STOMP over WebSocket API follows the AsyncAPI specifications.
+
+The AsyncAPI file can be found at `asyncapi.yaml`.
